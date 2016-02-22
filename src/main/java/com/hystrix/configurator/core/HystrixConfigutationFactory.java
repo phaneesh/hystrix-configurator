@@ -73,6 +73,14 @@ public class HystrixConfigutationFactory {
                             .withMetricsRollingPercentileBucketSize(c.getMetrics().getPercentileBucketSize())
                             .withMetricsRollingPercentileWindowInMilliseconds(c.getMetrics().getPercentileTimeInMillis())
                     )
+                    .andThreadPoolPropertiesDefaults(
+                            HystrixThreadPoolProperties.Setter()
+                                .withCoreSize(c.getThreadPool().getConcurrency())
+                                .withMaxQueueSize(c.getThreadPool().getMaxRequestQueueSize())
+                                .withQueueSizeRejectionThreshold(c.getThreadPool().getDynamicRequestQueueSize())
+                                .withMetricsRollingStatisticalWindowBuckets(c.getMetrics().getNumBucketSize())
+                                .withMetricsRollingStatisticalWindowInMilliseconds(c.getMetrics().getStatsTimeInMillis())
+                    )
             ));
         }
     }

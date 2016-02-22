@@ -33,7 +33,7 @@ Use the following maven dependency:
 <dependency>
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
