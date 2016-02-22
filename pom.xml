@@ -92,7 +92,7 @@
                         </goals>
                     </execution>
                 </executions>
-                <version>1.16.6.1</version>
+                <version>${lombok.maven.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
