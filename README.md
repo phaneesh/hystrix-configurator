@@ -37,7 +37,7 @@ Use the following maven dependency:
 </dependency>
 ```
 
-### Using Hystrix Configurator
+### Using Hystrix Configurator (With setter caching)
 ```java
 
        HystrixConfigutationFactory.init(
@@ -52,6 +52,30 @@ Use the following maven dependency:
    
            public SimpleTestCommand() {
                super("test");
+           }
+   
+           @Override
+           protected String run() throws Exception {
+               return "Simple Test";
+           }
+       }
+```
+
+### Using Hystrix Configurator (With ConfigurationManager)
+```java
+
+       HystrixConfigutationFactory.init(
+        HystrixConfig.builder()
+                .defaultConfig(HystrixDefaultConfig.builder().build())
+                .command(HystrixCommandConfig.builder().name("test").build())
+                .build());
+       
+       SimpleTestCommand command = new SimpleTestCommand();
+       String result = command.queue().get();
+       public class SimpleTestCommand extends HystrixCommand<String> {
+   
+           public SimpleTestCommand() {
+               super(HystrixCommandGroupKey.Factory.asKey("test"));
            }
    
            @Override

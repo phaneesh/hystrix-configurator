@@ -20,8 +20,9 @@ package com.hystrix.configutator;
 import com.hystrix.configurator.config.HystrixCommandConfig;
 import com.hystrix.configurator.config.HystrixConfig;
 import com.hystrix.configurator.config.HystrixDefaultConfig;
-import com.hystrix.configurator.core.BaseCommand;
 import com.hystrix.configurator.core.HystrixConfigutationFactory;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,10 +54,10 @@ public class HystrixConfigurationMultipleCommandsTest {
         Assert.assertTrue(result2.equals("Simple Test 2"));
     }
 
-    public static class SimpleTestCommand1 extends BaseCommand<String> {
+    public static class SimpleTestCommand1 extends HystrixCommand<String> {
 
         public SimpleTestCommand1() {
-            super("test");
+            super(HystrixCommandGroupKey.Factory.asKey("test"));
         }
 
         @Override
@@ -65,10 +66,10 @@ public class HystrixConfigurationMultipleCommandsTest {
         }
     }
 
-    public static class SimpleTestCommand2 extends BaseCommand<String> {
+    public static class SimpleTestCommand2 extends HystrixCommand<String> {
 
         public SimpleTestCommand2() {
-            super("test");
+            super(HystrixCommandGroupKey.Factory.asKey("test"));
         }
 
         @Override
