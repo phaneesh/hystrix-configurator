@@ -20,7 +20,7 @@ package com.hystrix.configutator;
 import com.hystrix.configurator.config.HystrixCommandConfig;
 import com.hystrix.configurator.config.HystrixConfig;
 import com.hystrix.configurator.config.HystrixDefaultConfig;
-import com.hystrix.configurator.core.HystrixConfigutationFactory;
+import com.hystrix.configurator.core.HystrixConfigurationFactory;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import org.junit.Assert;
@@ -36,7 +36,7 @@ public class HystrixConfigurationMultipleCommandsTest {
 
     @Before
     public void setup() {
-        HystrixConfigutationFactory.init(
+        HystrixConfigurationFactory.init(
                 HystrixConfig.builder()
                         .defaultConfig(HystrixDefaultConfig.builder().build())
                         .command(HystrixCommandConfig.builder().name("test").build())

@@ -3,33 +3,34 @@ package com.hystrix.configurator.core;
 import com.hystrix.configurator.config.*;
 import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.*;
+import lombok.Getter;
+import lombok.val;
 
-import java.security.InvalidParameterException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
  * @author phaneesh
  */
-public class HystrixConfigutationFactory {
+public class HystrixConfigurationFactory {
 
     private final HystrixConfig config;
 
+    @Getter
     private HystrixDefaultConfig defaultConfig;
 
-    private Map<String, HystrixCommandConfig> commandConfigMap;
+    private ConcurrentHashMap<String, HystrixCommand.Setter> hystrixConfigCache;
 
-    private Map<String, HystrixCommand.Setter> hystrixConfigCache;
+    private static HystrixConfigurationFactory factory;
 
-    private static HystrixConfigutationFactory factory;
-
-    private HystrixConfigutationFactory(final HystrixConfig config) {
+    private HystrixConfigurationFactory(final HystrixConfig config) {
         this.config = config;
     }
 
     public static void init(final HystrixConfig config) {
         if(factory == null) {
-            factory = new HystrixConfigutationFactory(config);
+            factory = new HystrixConfigurationFactory(config);
         }
         factory.setup();
     }
@@ -46,8 +47,8 @@ public class HystrixConfigutationFactory {
                 defaultConfig.setCircuitBreaker(new CircuitBreakerConfig());
             if(defaultConfig.getMetrics() == null)
                 defaultConfig.setMetrics(new MetricsConfig());
-            commandConfigMap = config.getCommands().stream().collect(Collectors.toMap(HystrixCommandConfig::getName, (c) -> c));
-            commandConfigMap.forEach( (k,v) -> {
+            Map<String, HystrixCommandConfig> commandConfigMap = config.getCommands().stream().collect(Collectors.toMap(HystrixCommandConfig::getName, (c) -> c));
+            commandConfigMap.forEach( (k, v) -> {
                 if(v.getCircuitBreaker() == null)
                     v.setCircuitBreaker(defaultConfig.getCircuitBreaker());
                 if(v.getThreadPool() == null)
@@ -79,7 +80,7 @@ public class HystrixConfigutationFactory {
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.metrics.rollingPercentile.bucketSize", defaultConfig.getMetrics().getPercentileBucketSize());
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.metrics.healthSnapshot.intervalInMilliseconds", defaultConfig.getMetrics().getHealthCheckInterval());
 
-            commandConfigMap.values().stream().forEach( c -> {
+            commandConfigMap.values().stream().forEach(c -> {
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.coreSize", c.getName()), c.getThreadPool().getConcurrency());
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.maxQueueSize", c.getName()), c.getThreadPool().getMaxRequestQueueSize());
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.queueSizeRejectionThreshold", c.getName()), c.getThreadPool().getDynamicRequestQueueSize());
@@ -104,7 +105,7 @@ public class HystrixConfigutationFactory {
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.metrics.healthSnapshot.intervalInMilliseconds", c.getName()), c.getMetrics().getHealthCheckInterval());
             });
 
-            hystrixConfigCache = commandConfigMap.values().stream().collect(Collectors.toMap(HystrixCommandConfig::getName, (c) ->
+            val mapData = commandConfigMap.values().stream().collect(Collectors.toMap(HystrixCommandConfig::getName, (c) ->
                     HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(c.getName()))
                             .andCommandKey(HystrixCommandKey.Factory.asKey(c.getName()))
                             .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(c.getName()))
@@ -131,12 +132,41 @@ public class HystrixConfigutationFactory {
                                             .withMetricsRollingStatisticalWindowInMilliseconds(c.getMetrics().getStatsTimeInMillis())
                             )
                 ));
+            hystrixConfigCache = new ConcurrentHashMap<>();
+            hystrixConfigCache.putAll(mapData);
         }
     }
 
     public static HystrixCommand.Setter getCommandConfiguration(final String key) {
         if(factory == null) throw new IllegalStateException("Factory not initialized");
-        if(!factory.hystrixConfigCache.containsKey(key)) throw new InvalidParameterException("Invalid command key");
+        if(!factory.hystrixConfigCache.containsKey(key)) {
+            factory.hystrixConfigCache.putIfAbsent(key,
+            HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(key))
+                    .andCommandKey(HystrixCommandKey.Factory.asKey(key))
+                    .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(key))
+                    .andCommandPropertiesDefaults(
+                            HystrixCommandProperties.Setter()
+                                    .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD)
+                                    .withExecutionIsolationSemaphoreMaxConcurrentRequests(factory.getDefaultConfig().getThreadPool().getConcurrency())
+                                    .withFallbackIsolationSemaphoreMaxConcurrentRequests(factory.getDefaultConfig().getThreadPool().getConcurrency())
+                                    .withFallbackEnabled(false)
+                                    .withCircuitBreakerErrorThresholdPercentage(factory.getDefaultConfig().getCircuitBreaker().getErrorThreshold())
+                                    .withCircuitBreakerRequestVolumeThreshold(factory.getDefaultConfig().getCircuitBreaker().getAcceptableFailuresInWindow())
+                                    .withCircuitBreakerSleepWindowInMilliseconds(factory.getDefaultConfig().getCircuitBreaker().getWaitTimeBeforeRetry())
+                                    .withExecutionTimeoutInMilliseconds(factory.getDefaultConfig().getThreadPool().getTimeout())
+                                    .withMetricsHealthSnapshotIntervalInMilliseconds(factory.getDefaultConfig().getMetrics().getHealthCheckInterval())
+                                    .withMetricsRollingPercentileBucketSize(factory.getDefaultConfig().getMetrics().getPercentileBucketSize())
+                                    .withMetricsRollingPercentileWindowInMilliseconds(factory.getDefaultConfig().getMetrics().getPercentileTimeInMillis())
+                    )
+                    .andThreadPoolPropertiesDefaults(
+                            HystrixThreadPoolProperties.Setter()
+                                    .withCoreSize(factory.getDefaultConfig().getThreadPool().getConcurrency())
+                                    .withMaxQueueSize(factory.getDefaultConfig().getThreadPool().getMaxRequestQueueSize())
+                                    .withQueueSizeRejectionThreshold(factory.getDefaultConfig().getThreadPool().getDynamicRequestQueueSize())
+                                    .withMetricsRollingStatisticalWindowBuckets(factory.getDefaultConfig().getMetrics().getNumBucketSize())
+                                    .withMetricsRollingStatisticalWindowInMilliseconds(factory.getDefaultConfig().getMetrics().getStatsTimeInMillis())
+                    ));
+        }
         return factory.hystrixConfigCache.get(key);
     }
 }

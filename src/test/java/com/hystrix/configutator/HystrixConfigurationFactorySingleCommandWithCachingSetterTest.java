@@ -21,9 +21,7 @@ import com.hystrix.configurator.config.HystrixCommandConfig;
 import com.hystrix.configurator.config.HystrixConfig;
 import com.hystrix.configurator.config.HystrixDefaultConfig;
 import com.hystrix.configurator.core.BaseCommand;
-import com.hystrix.configurator.core.HystrixConfigutationFactory;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.hystrix.configurator.core.HystrixConfigurationFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +35,7 @@ public class HystrixConfigurationFactorySingleCommandWithCachingSetterTest {
 
     @Before
     public void setup() {
-        HystrixConfigutationFactory.init(
+        HystrixConfigurationFactory.init(
                 HystrixConfig.builder()
                         .defaultConfig(HystrixDefaultConfig.builder().build())
                         .command(HystrixCommandConfig.builder().name("test").build())

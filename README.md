@@ -33,14 +33,14 @@ Use the following maven dependency:
 <dependency>
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 
 ### Using Hystrix Configurator (With setter caching)
 ```java
 
-       HystrixConfigutationFactory.init(
+       HystrixConfigurationFactory.init(
         HystrixConfig.builder()
                 .defaultConfig(HystrixDefaultConfig.builder().build())
                 .command(HystrixCommandConfig.builder().name("test").build())
@@ -64,7 +64,7 @@ Use the following maven dependency:
 ### Using Hystrix Configurator (With ConfigurationManager)
 ```java
 
-       HystrixConfigutationFactory.init(
+       HystrixConfigurationFactory.init(
         HystrixConfig.builder()
                 .defaultConfig(HystrixDefaultConfig.builder().build())
                 .command(HystrixCommandConfig.builder().name("test").build())

@@ -8,7 +8,7 @@ import com.netflix.hystrix.HystrixCommand;
 public abstract class BaseCommand<T> extends HystrixCommand<T> {
 
     public BaseCommand(final String name) {
-        super(HystrixConfigutationFactory.getCommandConfiguration(name));
+        super(HystrixConfigurationFactory.getCommandConfiguration(name));
     }
 
 }
