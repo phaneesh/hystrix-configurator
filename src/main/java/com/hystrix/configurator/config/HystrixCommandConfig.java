@@ -16,7 +16,6 @@
 
 package com.hystrix.configurator.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,9 +24,7 @@ import lombok.NoArgsConstructor;
  * @author phaneesh
  */
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class HystrixCommandConfig {
 
     private String name;
@@ -39,4 +36,13 @@ public class HystrixCommandConfig {
     private MetricsConfig metrics = new MetricsConfig();
 
     private boolean fallbackEnabled = true;
+
+    @Builder
+    public HystrixCommandConfig(String name, ThreadPoolConfig threadPool, CircuitBreakerConfig circuitBreaker, MetricsConfig metrics, boolean fallbackEnabled) {
+        this.name = name;
+        this.threadPool = threadPool;
+        this.circuitBreaker = circuitBreaker;
+        this.metrics = metrics;
+        this.fallbackEnabled = fallbackEnabled;
+    }
 }

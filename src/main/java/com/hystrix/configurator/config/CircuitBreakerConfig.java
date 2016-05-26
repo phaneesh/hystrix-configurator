@@ -16,7 +16,6 @@
 
 package com.hystrix.configurator.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,8 +24,6 @@ import lombok.NoArgsConstructor;
  * @author phaneesh
  */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class CircuitBreakerConfig {
 
@@ -35,4 +32,11 @@ public class CircuitBreakerConfig {
     private int waitTimeBeforeRetry = 5000;
 
     private int errorThreshold = 50;
+
+    @Builder
+    public CircuitBreakerConfig(int acceptableFailuresInWindow, int waitTimeBeforeRetry, int errorThreshold) {
+        this.acceptableFailuresInWindow = acceptableFailuresInWindow;
+        this.waitTimeBeforeRetry = waitTimeBeforeRetry;
+        this.errorThreshold = errorThreshold;
+    }
 }

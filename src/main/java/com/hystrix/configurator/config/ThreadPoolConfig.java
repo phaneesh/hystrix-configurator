@@ -16,7 +16,6 @@
 
 package com.hystrix.configurator.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,8 +24,6 @@ import lombok.NoArgsConstructor;
  * @author phaneesh
  */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class ThreadPoolConfig {
 
@@ -39,4 +36,13 @@ public class ThreadPoolConfig {
     private int dynamicRequestQueueSize = 16;
 
     private int timeout = 1000;
+
+    @Builder
+    public ThreadPoolConfig(boolean semaphoreIsolation, int concurrency, int maxRequestQueueSize, int dynamicRequestQueueSize, int timeout) {
+        this.semaphoreIsolation = semaphoreIsolation;
+        this.concurrency = concurrency;
+        this.maxRequestQueueSize = maxRequestQueueSize;
+        this.dynamicRequestQueueSize = dynamicRequestQueueSize;
+        this.timeout = timeout;
+    }
 }

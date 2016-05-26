@@ -16,7 +16,6 @@
 
 package com.hystrix.configurator.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,9 +26,7 @@ import javax.validation.constraints.Max;
  * @author phaneesh
  */
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class MetricsConfig {
 
     @Max(60000)
@@ -42,4 +39,13 @@ public class MetricsConfig {
     private int percentileBucketSize = 100;
 
     private int numBucketSize = 100;
+
+    @Builder
+    public MetricsConfig(int statsTimeInMillis, int healthCheckInterval, int percentileTimeInMillis, int percentileBucketSize, int numBucketSize) {
+        this.statsTimeInMillis = statsTimeInMillis;
+        this.healthCheckInterval = healthCheckInterval;
+        this.percentileTimeInMillis = percentileTimeInMillis;
+        this.percentileBucketSize = percentileBucketSize;
+        this.numBucketSize = numBucketSize;
+    }
 }

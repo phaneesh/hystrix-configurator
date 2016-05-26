@@ -38,15 +38,6 @@ public class HystrixConfigurationFactory {
     private void setup() {
         if(config != null) {
             defaultConfig = config.getDefaultConfig();
-            if(defaultConfig == null) {
-                defaultConfig = new HystrixDefaultConfig();
-            }
-            if(defaultConfig.getThreadPool() == null)
-                defaultConfig.setThreadPool(new ThreadPoolConfig());
-            if(defaultConfig.getCircuitBreaker() == null)
-                defaultConfig.setCircuitBreaker(new CircuitBreakerConfig());
-            if(defaultConfig.getMetrics() == null)
-                defaultConfig.setMetrics(new MetricsConfig());
             Map<String, HystrixCommandConfig> commandConfigMap = config.getCommands().stream().collect(Collectors.toMap(HystrixCommandConfig::getName, (c) -> c));
             commandConfigMap.forEach( (k, v) -> {
                 if(v.getCircuitBreaker() == null)

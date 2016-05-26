@@ -38,7 +38,7 @@ public class HystrixConfigurationMultipleCommandsTest {
     public void setup() {
         HystrixConfigurationFactory.init(
                 HystrixConfig.builder()
-                        .defaultConfig(HystrixDefaultConfig.builder().build())
+                        .defaultConfig(new HystrixDefaultConfig())
                         .command(HystrixCommandConfig.builder().name("test").build())
                         .build());
     }

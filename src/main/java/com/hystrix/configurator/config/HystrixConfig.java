@@ -18,20 +18,25 @@ package com.hystrix.configurator.config;
 
 import lombok.*;
 
+import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author phaneesh
  */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class HystrixConfig {
 
-    private HystrixDefaultConfig defaultConfig;
+    @NotNull
+    private HystrixDefaultConfig defaultConfig = new HystrixDefaultConfig();
 
-    @Singular
-    private List<HystrixCommandConfig> commands;
+    private List<HystrixCommandConfig> commands = Collections.emptyList();
 
+    @Builder
+    public HystrixConfig(HystrixDefaultConfig defaultConfig, @Singular List<HystrixCommandConfig> commands) {
+        this.defaultConfig = defaultConfig;
+        this.commands = commands;
+    }
 }

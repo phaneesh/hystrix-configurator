@@ -1,6 +1,5 @@
 package com.hystrix.configurator.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,8 +8,6 @@ import lombok.NoArgsConstructor;
  * @author phaneesh
  */
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class HystrixDefaultConfig {
 
@@ -19,4 +16,11 @@ public class HystrixDefaultConfig {
     private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
 
     private MetricsConfig metrics = new MetricsConfig();
+
+    @Builder
+    public HystrixDefaultConfig(ThreadPoolConfig threadPool, CircuitBreakerConfig circuitBreaker, MetricsConfig metrics) {
+        this.threadPool = threadPool;
+        this.circuitBreaker = circuitBreaker;
+        this.metrics = metrics;
+    }
 }
