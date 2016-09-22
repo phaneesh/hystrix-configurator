@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 
@@ -40,7 +41,7 @@ public class HystrixConfigurationFactorySingleCommandTest {
         HystrixConfigurationFactory.init(
         HystrixConfig.builder()
                 .defaultConfig(new HystrixDefaultConfig())
-                .command(HystrixCommandConfig.builder().name("test").build())
+                .commands(Collections.singletonList(HystrixCommandConfig.builder().name("test").build()))
                 .build());
     }
 

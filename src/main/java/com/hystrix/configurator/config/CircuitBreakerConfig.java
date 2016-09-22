@@ -39,4 +39,14 @@ public class CircuitBreakerConfig {
         this.waitTimeBeforeRetry = waitTimeBeforeRetry;
         this.errorThreshold = errorThreshold;
     }
+
+    //Default values
+    public static class CircuitBreakerConfigBuilder {
+
+        private int acceptableFailuresInWindow = 20;
+
+        private int waitTimeBeforeRetry = 5000;
+
+        private int errorThreshold = 50;
+    }
 }

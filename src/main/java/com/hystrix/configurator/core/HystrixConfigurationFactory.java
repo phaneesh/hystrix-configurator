@@ -56,7 +56,7 @@ public class HystrixConfigurationFactory {
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.execution.thread.timeoutInMilliseconds", defaultConfig.getThreadPool().getTimeout());
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.execution.timeout.enabled", true);
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.execution.isolation.thread.interruptOnTimeout", true);
-            ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.execution.isolation.semaphore.macConcurrentRequests", defaultConfig.getThreadPool().getConcurrency());
+            ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.execution.isolation.semaphore.maxConcurrentRequests", defaultConfig.getThreadPool().getConcurrency());
 
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.circuitBreaker.enabled", true);
             ConfigurationManager.getConfigInstance().setProperty("hystrix.command.default.circuitBreaker.requestVolumeThreshold", defaultConfig.getCircuitBreaker().getAcceptableFailuresInWindow());
@@ -80,7 +80,7 @@ public class HystrixConfigurationFactory {
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.execution.thread.timeoutInMilliseconds", c.getName()), c.getThreadPool().getTimeout());
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.execution.timeout.enabled", c.getName()), true);
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.execution.isolation.thread.interruptOnTimeout", c.getName()), true);
-                ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.execution.isolation.semaphore.macConcurrentRequests", c.getName()), c.getThreadPool().getConcurrency());
+                ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.execution.isolation.semaphore.maxConcurrentRequests", c.getName()), c.getThreadPool().getConcurrency());
 
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.circuitBreaker.enabled", c.getName()), true);
                 ConfigurationManager.getConfigInstance().setProperty(String.format("hystrix.command.%s.circuitBreaker.requestVolumeThreshold", c.getName()), c.getCircuitBreaker().getAcceptableFailuresInWindow());

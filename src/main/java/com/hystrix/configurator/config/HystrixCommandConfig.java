@@ -29,20 +29,33 @@ public class HystrixCommandConfig {
 
     private String name;
 
-    private ThreadPoolConfig threadPool;
+    private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
 
-    private CircuitBreakerConfig circuitBreaker;
+    private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
 
-    private MetricsConfig metrics = new MetricsConfig();
+    private MetricsConfig metrics = MetricsConfig.builder().build();
 
     private boolean fallbackEnabled = true;
 
     @Builder
-    public HystrixCommandConfig(String name, ThreadPoolConfig threadPool, CircuitBreakerConfig circuitBreaker, MetricsConfig metrics, boolean fallbackEnabled) {
+    public HystrixCommandConfig(String name, ThreadPoolConfig threadPool, CircuitBreakerConfig circuitBreaker,
+                                MetricsConfig metrics, boolean fallbackEnabled) {
         this.name = name;
         this.threadPool = threadPool;
         this.circuitBreaker = circuitBreaker;
         this.metrics = metrics;
         this.fallbackEnabled = fallbackEnabled;
+    }
+
+    public static class HystrixCommandConfigBuilder {
+
+        private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
+
+        private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
+
+        private MetricsConfig metrics = MetricsConfig.builder().build();
+
+        private boolean fallbackEnabled = true;
+
     }
 }

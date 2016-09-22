@@ -48,4 +48,19 @@ public class MetricsConfig {
         this.percentileBucketSize = percentileBucketSize;
         this.numBucketSize = numBucketSize;
     }
+
+    //Default values
+    public static class MetricsConfigBuilder {
+
+        private int statsTimeInMillis = 60000;
+
+        private int healthCheckInterval = 500;
+
+        private int percentileTimeInMillis = 60000;
+
+        private int percentileBucketSize = 100;
+
+        private int numBucketSize = 100;
+
+    }
 }

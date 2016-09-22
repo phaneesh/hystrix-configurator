@@ -5,7 +5,7 @@ with ease without having to write plumbing code.
 This library compiles only on Java 8.
  
 ## Dependencies
-* Hystrix 1.4.21  
+* Hystrix 1.5.3  
 
 ## Usage
 Configuring Hystrix environment requires one to write a lot of plumbing code. Using this helper library it is very easy to
@@ -33,7 +33,7 @@ Use the following maven dependency:
 <dependency>
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 

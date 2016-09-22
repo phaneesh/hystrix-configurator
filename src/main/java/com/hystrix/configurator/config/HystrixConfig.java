@@ -30,13 +30,21 @@ import java.util.List;
 public class HystrixConfig {
 
     @NotNull
-    private HystrixDefaultConfig defaultConfig = new HystrixDefaultConfig();
+    private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
 
     private List<HystrixCommandConfig> commands = Collections.emptyList();
 
     @Builder
-    public HystrixConfig(HystrixDefaultConfig defaultConfig, @Singular List<HystrixCommandConfig> commands) {
+    public HystrixConfig(HystrixDefaultConfig defaultConfig, List<HystrixCommandConfig> commands) {
         this.defaultConfig = defaultConfig;
         this.commands = commands;
+    }
+
+    public static class HystrixConfigBuilder {
+
+        private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
+
+        private List<HystrixCommandConfig> commands = Collections.emptyList();
+
     }
 }

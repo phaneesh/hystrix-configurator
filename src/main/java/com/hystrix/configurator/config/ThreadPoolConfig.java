@@ -20,6 +20,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author phaneesh
  */
@@ -44,5 +47,19 @@ public class ThreadPoolConfig {
         this.maxRequestQueueSize = maxRequestQueueSize;
         this.dynamicRequestQueueSize = dynamicRequestQueueSize;
         this.timeout = timeout;
+    }
+
+    //Default values
+    public static class ThreadPoolConfigBuilder {
+
+        private boolean semaphoreIsolation = false;
+
+        private int concurrency = Runtime.getRuntime().availableProcessors();
+
+        private int maxRequestQueueSize = Runtime.getRuntime().availableProcessors() * 4;
+
+        private int dynamicRequestQueueSize = Runtime.getRuntime().availableProcessors() * 2;
+
+        private int timeout = 1000;
     }
 }
