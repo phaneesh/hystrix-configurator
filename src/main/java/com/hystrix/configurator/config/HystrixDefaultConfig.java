@@ -23,14 +23,4 @@ public class HystrixDefaultConfig {
         this.circuitBreaker = circuitBreaker;
         this.metrics = metrics;
     }
-
-    public static class HystrixDefaultConfigBuilder {
-
-        private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
-
-        private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
-
-        private MetricsConfig metrics = MetricsConfig.builder().build();
-
-    }
 }

@@ -4,18 +4,17 @@
 
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7-R-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>hystrix-configurator</name>
     <url>http://maven.apache.org</url>
 
     <distributionManagement>
-        <repository>
-            <id>clojars</id>
-            <name>Clojars repository</name>
-            <url>https://clojars.org/repo</url>
-        </repository>
+        <snapshotRepository>
+            <id>phonepe-snapshots</id>
+            <url>http://artifactory.phonepe.com/content/repositories/snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <scm>

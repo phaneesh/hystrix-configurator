@@ -16,8 +16,11 @@
 
 package com.hystrix.configurator.config;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
@@ -32,19 +35,18 @@ public class HystrixConfig {
     @NotNull
     private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
 
+    @Valid
+    private List<ThreadPoolConfig> pools = Collections.emptyList();
+
+    @Valid
     private List<HystrixCommandConfig> commands = Collections.emptyList();
 
     @Builder
-    public HystrixConfig(HystrixDefaultConfig defaultConfig, List<HystrixCommandConfig> commands) {
+    public HystrixConfig(HystrixDefaultConfig defaultConfig,
+                         List<ThreadPoolConfig> pools,
+                         List<HystrixCommandConfig> commands) {
         this.defaultConfig = defaultConfig;
+        this.pools = pools;
         this.commands = commands;
-    }
-
-    public static class HystrixConfigBuilder {
-
-        private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
-
-        private List<HystrixCommandConfig> commands = Collections.emptyList();
-
     }
 }

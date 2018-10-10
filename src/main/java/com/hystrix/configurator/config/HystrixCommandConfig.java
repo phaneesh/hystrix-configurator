@@ -20,6 +20,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * @author phaneesh
  */
@@ -27,8 +30,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class HystrixCommandConfig {
 
+    @NotNull
     private String name;
 
+    @Valid
     private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
 
     private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
@@ -38,8 +43,11 @@ public class HystrixCommandConfig {
     private boolean fallbackEnabled = true;
 
     @Builder
-    public HystrixCommandConfig(String name, ThreadPoolConfig threadPool, CircuitBreakerConfig circuitBreaker,
-                                MetricsConfig metrics, boolean fallbackEnabled) {
+    public HystrixCommandConfig(String name,
+                                ThreadPoolConfig threadPool,
+                                CircuitBreakerConfig circuitBreaker,
+                                MetricsConfig metrics,
+                                boolean fallbackEnabled) {
         this.name = name;
         this.threadPool = threadPool;
         this.circuitBreaker = circuitBreaker;
