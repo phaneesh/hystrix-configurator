@@ -49,4 +49,12 @@ public class HystrixConfig {
         this.pools = pools;
         this.commands = commands;
     }
+
+    public static class HystrixConfigBuilder {
+
+        private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
+
+        private List<HystrixCommandConfig> commands = Collections.emptyList();
+
+    }
 }
