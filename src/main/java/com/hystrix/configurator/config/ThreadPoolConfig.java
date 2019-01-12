@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
 public class ThreadPoolConfig {
 
     @NotNull
-    private String pool = "default";
+    private String pool;
 
     private boolean semaphoreIsolation = false;
 
@@ -60,7 +60,7 @@ public class ThreadPoolConfig {
     //Default values
     public static class ThreadPoolConfigBuilder {
 
-        private String pool = "default";
+        private String pool;
 
         private boolean semaphoreIsolation = false;
 
