@@ -38,6 +38,8 @@ public class CommandThreadPoolConfig {
     //Default values
     public static class CommandThreadPoolConfigBuilder {
 
+        private String pool;
+
         private boolean semaphoreIsolation = false;
 
         private int concurrency = Runtime.getRuntime().availableProcessors();

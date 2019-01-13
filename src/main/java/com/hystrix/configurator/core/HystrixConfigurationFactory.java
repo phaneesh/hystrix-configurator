@@ -33,9 +33,7 @@ public class HystrixConfigurationFactory {
     }
 
     public static void init(final HystrixConfig config) {
-        if (factory == null) {
-            factory = new HystrixConfigurationFactory(config);
-        }
+        factory = new HystrixConfigurationFactory(config);
         factory.setup();
     }
 
@@ -252,7 +250,6 @@ public class HystrixConfigurationFactory {
     private void configureProperty(String property, boolean value) {
         ConfigurationManager.getConfigInstance().setProperty(property, value);
     }
-    
 
     public static HystrixCommand.Setter getCommandConfiguration(final String key) {
         if (factory == null) throw new IllegalStateException("Factory not initialized");
@@ -260,5 +257,13 @@ public class HystrixConfigurationFactory {
             factory.registerCommandProperties(key);
         }
         return factory.commandCache.get(key);
+    }
+
+    public static ConcurrentHashMap<String, HystrixCommand.Setter> getCommandCache() {
+        return factory.commandCache;
+    }
+
+    public static ConcurrentHashMap<String, HystrixThreadPoolProperties.Setter> getPoolCache() {
+        return factory.poolCache;
     }
 }
