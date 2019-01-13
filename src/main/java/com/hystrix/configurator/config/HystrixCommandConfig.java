@@ -34,7 +34,7 @@ public class HystrixCommandConfig {
     private String name;
 
     @Valid
-    private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
+    private CommandThreadPoolConfig threadPool = CommandThreadPoolConfig.builder().build();
 
     private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
 
@@ -44,7 +44,9 @@ public class HystrixCommandConfig {
 
     @Builder
     public HystrixCommandConfig(String name,
-                                ThreadPoolConfig threadPool,
+                                boolean semaphoreIsolation,
+                                int timeout,
+                                CommandThreadPoolConfig threadPool,
                                 CircuitBreakerConfig circuitBreaker,
                                 MetricsConfig metrics,
                                 boolean fallbackEnabled) {
@@ -57,7 +59,8 @@ public class HystrixCommandConfig {
 
     public static class HystrixCommandConfigBuilder {
 
-        private ThreadPoolConfig threadPool = ThreadPoolConfig.builder().build();
+        @Valid
+        private CommandThreadPoolConfig threadPool = CommandThreadPoolConfig.builder().build();
 
         private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
 

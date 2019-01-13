@@ -1,18 +1,12 @@
 package com.hystrix.configurator.core;
 
-import com.hystrix.configurator.config.HystrixCommandConfig;
-import com.hystrix.configurator.config.HystrixConfig;
-import com.hystrix.configurator.config.HystrixDefaultConfig;
-import com.hystrix.configurator.config.ThreadPoolConfig;
+import com.hystrix.configurator.config.*;
 import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -46,38 +40,42 @@ public class HystrixConfigurationFactory {
     }
 
     private void setup() {
-        validateUniquePools(config);
         validateUniqueCommands(config);
         defaultConfig = config.getDefaultConfig();
+        commandCache = new ConcurrentHashMap<>();
+        poolCache = new ConcurrentHashMap<>();
 
         registerDefaultProperties(defaultConfig);
 
-        Map<String, ThreadPoolConfig> poolConfigs = new HashMap<>();
         if (config.getPools() != null) {
-            config.getPools().forEach(pool -> {
-                poolConfigs.put(pool.getPool(), pool);
-                registerThreadPoolProperties(pool);
-                log.info("registered pool: {}", pool);
-            });
+            config.getPools().forEach((pool, poolConfig) -> configureThreadPoolIfMissing(globalPoolId(pool), poolConfig));
         }
-
-        commandCache = new ConcurrentHashMap<>();
-        poolCache = new ConcurrentHashMap<>();
 
         config.getCommands()
                 .forEach(commandConfig -> {
                     if (commandConfig.getCircuitBreaker() == null) {
                         commandConfig.setCircuitBreaker(defaultConfig.getCircuitBreaker());
                     }
+
                     if (commandConfig.getMetrics() == null) {
                         commandConfig.setMetrics(defaultConfig.getMetrics());
                     }
+
                     if (commandConfig.getThreadPool() == null) {
                         commandConfig.setThreadPool(defaultConfig.getThreadPool());
                     }
-                    registerCommandProperties(defaultConfig, poolConfigs, commandConfig);
+
+                    registerCommandProperties(defaultConfig, commandConfig);
                     log.info("registered command: {}", commandConfig.getName());
                 });
+    }
+
+    private String globalPoolId(String pool) {
+        return String.format("global_%s", pool);
+    }
+
+    private String commandPoolId(String commandName) {
+        return String.format("command_%s", commandName);
     }
 
     private void registerDefaultProperties(HystrixDefaultConfig defaultConfig) {
@@ -89,7 +87,7 @@ public class HystrixConfigurationFactory {
         configureProperty("hystrix.command.default.maxQueueSize", defaultConfig.getThreadPool().getMaxRequestQueueSize());
         configureProperty("hystrix.command.default.queueSizeRejectionThreshold", defaultConfig.getThreadPool().getDynamicRequestQueueSize());
 
-        configureProperty("hystrix.command.default.execution.isolation.strategy", defaultConfig.getThreadPool().isSemaphoreIsolation() ? "SEMAPHORE" : "THREAD");
+        configureProperty("hystrix.command.default.execution.isolation.strategy", "THREAD");
         configureProperty("hystrix.command.default.execution.thread.timeoutInMilliseconds", defaultConfig.getThreadPool().getTimeout());
         configureProperty("hystrix.command.default.execution.timeout.enabled", true);
         configureProperty("hystrix.command.default.execution.isolation.thread.interruptOnTimeout", true);
@@ -109,20 +107,35 @@ public class HystrixConfigurationFactory {
         configureProperty("hystrix.command.default.metrics.healthSnapshot.intervalInMilliseconds", defaultConfig.getMetrics().getHealthCheckInterval());
     }
 
-    private void registerThreadPoolProperties(ThreadPoolConfig pool) {
-
+    private void registerCommandProperties(String command) {
+        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
+                .name(command)
+                .semaphoreIsolation(false)
+                .threadPool(defaultConfig.getThreadPool())
+                .metrics(defaultConfig.getMetrics())
+                .circuitBreaker(defaultConfig.getCircuitBreaker())
+                .fallbackEnabled(false)
+                .build();
+        registerCommandProperties(defaultConfig, commandConfig);
     }
 
-    private void registerCommandProperties(HystrixDefaultConfig defaultConfig,
-                                           Map<String, ThreadPoolConfig> poolConfigs,
-                                           HystrixCommandConfig commandConfig) {
+    private void registerCommandProperties(HystrixDefaultConfig defaultConfig, HystrixCommandConfig commandConfig) {
         val command = commandConfig.getName();
 
-        configureProperty(String.format("hystrix.command.%s.execution.isolation.strategy", command), commandConfig.getThreadPool().isSemaphoreIsolation() ? "SEMAPHORE" : "THREAD");
-        configureProperty(String.format("hystrix.command.%s.execution.thread.timeoutInMilliseconds", command), commandConfig.getThreadPool().getTimeout());
+        val semaphoreIsolation = commandConfig.getThreadPool().isSemaphoreIsolation();
+
+        val isolationStrategy = semaphoreIsolation ? HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE
+                : HystrixCommandProperties.ExecutionIsolationStrategy.THREAD;
+
+
+        configureProperty(String.format("hystrix.command.%s.execution.isolation.strategy", command), isolationStrategy.name());
         configureProperty(String.format("hystrix.command.%s.execution.timeout.enabled", command), true);
+        configureProperty(String.format("hystrix.command.%s.execution.thread.timeoutInMilliseconds", command), commandConfig.getThreadPool().getTimeout());
         configureProperty(String.format("hystrix.command.%s.execution.isolation.thread.interruptOnTimeout", command), true);
-        configureProperty(String.format("hystrix.command.%s.execution.isolation.semaphore.maxConcurrentRequests", command), commandConfig.getThreadPool().getConcurrency());
+
+        if (semaphoreIsolation) {
+            configureProperty(String.format("hystrix.command.%s.execution.isolation.semaphore.maxConcurrentRequests", command), commandConfig.getThreadPool().getConcurrency());
+        }
 
         configureProperty(String.format("hystrix.command.%s.circuitBreaker.enabled", commandConfig.getName()), true);
         configureProperty(String.format("hystrix.command.%s.circuitBreaker.requestVolumeThreshold", commandConfig.getName()), commandConfig.getCircuitBreaker().getAcceptableFailuresInWindow());
@@ -138,10 +151,9 @@ public class HystrixConfigurationFactory {
         configureProperty(String.format("hystrix.command.%s.metrics.healthSnapshot.intervalInMilliseconds", commandConfig.getName()), commandConfig.getMetrics().getHealthCheckInterval());
 
         val commandProperties = HystrixCommandProperties.Setter()
-                .withExecutionIsolationStrategy(commandConfig.getThreadPool().isSemaphoreIsolation() ? HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE : HystrixCommandProperties.ExecutionIsolationStrategy.THREAD)
-                .withExecutionIsolationSemaphoreMaxConcurrentRequests(commandConfig.getThreadPool().getConcurrency())
-                .withFallbackIsolationSemaphoreMaxConcurrentRequests(commandConfig.getThreadPool().getConcurrency())
+                .withExecutionIsolationStrategy(isolationStrategy)
                 .withFallbackEnabled(commandConfig.isFallbackEnabled())
+                .withCircuitBreakerEnabled(true)
                 .withCircuitBreakerErrorThresholdPercentage(commandConfig.getCircuitBreaker().getErrorThreshold())
                 .withCircuitBreakerRequestVolumeThreshold(commandConfig.getCircuitBreaker().getAcceptableFailuresInWindow())
                 .withCircuitBreakerSleepWindowInMilliseconds(commandConfig.getCircuitBreaker().getWaitTimeBeforeRetry())
@@ -150,66 +162,63 @@ public class HystrixConfigurationFactory {
                 .withMetricsRollingPercentileBucketSize(commandConfig.getMetrics().getPercentileBucketSize())
                 .withMetricsRollingPercentileWindowInMilliseconds(commandConfig.getMetrics().getPercentileTimeInMillis());
 
+        if (semaphoreIsolation) {
+            commandProperties.withExecutionIsolationSemaphoreMaxConcurrentRequests(commandConfig.getThreadPool().getConcurrency())
+                    .withFallbackIsolationSemaphoreMaxConcurrentRequests(commandConfig.getThreadPool().getConcurrency());
+        }
+
         HystrixCommand.Setter commandConfiguration = HystrixCommand.Setter
                 .withGroupKey(HystrixCommandGroupKey.Factory.asKey(commandConfig.getName()))
                 .andCommandKey(HystrixCommandKey.Factory.asKey(commandConfig.getName()))
                 .andCommandPropertiesDefaults(commandProperties);
 
-        if (!commandConfig.getThreadPool().isSemaphoreIsolation()) {
-            val explicitPool = commandConfig.getThreadPool() != null ? commandConfig.getThreadPool().getPool() : null;
+        if (!semaphoreIsolation) {
+            val globalPool = commandConfig.getThreadPool() != null ? commandConfig.getThreadPool().getPool() : null;
             /*
                 If an explicit pool is defined, it should be present in pool list otherwise
                 a pool with name same as command would be defined
             */
-            if (explicitPool != null && !poolConfigs.containsKey(explicitPool)) {
-                val message = String.format("Undefined explicit pool [%s] used in command [%s]", explicitPool, command);
-                log.error(message);
-                throw new RuntimeException(message);
+            HystrixThreadPoolProperties.Setter poolConfiguration;
+            val poolName = globalPool != null ? globalPoolId(globalPool) : commandPoolId(command);
+            if (globalPool != null) {
+                poolConfiguration = poolCache.get(poolName);
+                if (poolConfiguration == null) {
+                    val message = String.format("Undefined global pool [%s] used in command [%s]", globalPool, command);
+                    log.error(message);
+                    throw new RuntimeException(message);
+                }
+            } else {
+                configureThreadPoolIfMissing(poolName, toPoolConfig(commandConfig.getThreadPool()));
             }
-            val effectivePool = explicitPool != null ? explicitPool : command;
-            val poolConfig = explicitPool != null ? poolConfigs.get(explicitPool) : defaultConfig.getThreadPool();
-            val poolPrefix = explicitPool != null ? "pool" : "com";
-            val pool = String.format("%s_%s", poolPrefix, effectivePool);
-            log.info("using pool: {} with prefix: {} for command: {}", effectivePool, poolPrefix, command);
 
-            val poolConfiguration = getOrCreateThreadPool(pool, defaultConfig, poolConfig);
-            commandConfiguration
-                    .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(pool))
-                    .andThreadPoolPropertiesDefaults(poolConfiguration);
+            commandConfiguration.andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(poolName));
         }
         commandCache.put(commandConfig.getName(), commandConfiguration);
     }
 
-    private HystrixThreadPoolProperties.Setter getOrCreateThreadPool(String pool,
-                                                                     HystrixDefaultConfig defaultConfig,
-                                                                     ThreadPoolConfig poolConfig) {
-        if (poolCache.containsKey(pool)) {
-            return poolCache.get(pool);
+    private ThreadPoolConfig toPoolConfig(CommandThreadPoolConfig threadPool) {
+        return ThreadPoolConfig.builder()
+                .concurrency(threadPool.getConcurrency())
+                .dynamicRequestQueueSize(threadPool.getDynamicRequestQueueSize())
+                .maxRequestQueueSize(threadPool.getMaxRequestQueueSize())
+                .build();
+    }
+
+    private void configureThreadPoolIfMissing(String poolName, ThreadPoolConfig poolConfig) {
+        if (poolCache.containsKey(poolName)) {
+            return;
         }
 
-        configureProperty(String.format("hystrix.threadpool.%s.coreSize", pool), poolConfig.getConcurrency());
-        configureProperty(String.format("hystrix.threadpool.%s.maximumSize", pool), poolConfig.getConcurrency());
-        configureProperty(String.format("hystrix.threadpool.%s.maxQueueSize", pool), poolConfig.getMaxRequestQueueSize());
-        configureProperty(String.format("hystrix.threadpool.%s.queueSizeRejectionThreshold", pool), poolConfig.getDynamicRequestQueueSize());
+        configureProperty(String.format("hystrix.threadpool.%s.coreSize", poolName), poolConfig.getConcurrency());
+        configureProperty(String.format("hystrix.threadpool.%s.maximumSize", poolName), poolConfig.getConcurrency());
+        configureProperty(String.format("hystrix.threadpool.%s.maxQueueSize", poolName), poolConfig.getMaxRequestQueueSize());
+        configureProperty(String.format("hystrix.threadpool.%s.queueSizeRejectionThreshold", poolName), poolConfig.getDynamicRequestQueueSize());
 
-        HystrixThreadPoolProperties.Setter poolHystrixSetter = HystrixThreadPoolProperties.Setter()
+        poolCache.put(poolName, HystrixThreadPoolProperties.Setter()
                 .withCoreSize(poolConfig.getConcurrency())
                 .withMaximumSize(poolConfig.getConcurrency())
                 .withMaxQueueSize(poolConfig.getMaxRequestQueueSize())
-                .withQueueSizeRejectionThreshold(poolConfig.getDynamicRequestQueueSize());
-        poolCache.put(pool, poolHystrixSetter);
-        return poolHystrixSetter;
-    }
-
-    private void registerCommandProperties(String command) {
-        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
-                .name(command)
-                .threadPool(defaultConfig.getThreadPool())
-                .metrics(defaultConfig.getMetrics())
-                .circuitBreaker(defaultConfig.getCircuitBreaker())
-                .fallbackEnabled(false)
-                .build();
-        registerCommandProperties(defaultConfig, Collections.emptyMap(), commandConfig);
+                .withQueueSizeRejectionThreshold(poolConfig.getDynamicRequestQueueSize()));
     }
 
     private void validateUniqueCommands(HystrixConfig config) {
@@ -229,26 +238,6 @@ public class HystrixConfigurationFactory {
                 });
         if (duplicatePresent.get()) {
             throw new RuntimeException("Duplicate Hystrix Command Configurations");
-        }
-    }
-
-    private void validateUniquePools(HystrixConfig config) {
-        if (config.getPools() == null) {
-            return;
-        }
-
-        AtomicBoolean duplicatePresent = new AtomicBoolean(false);
-        config.getPools().stream()
-                .collect(Collectors.groupingBy(ThreadPoolConfig::getPool, Collectors.counting()))
-                .entrySet()
-                .stream()
-                .filter(x -> x.getValue() > 1)
-                .forEach(x -> {
-                    log.warn("Duplicate pool configuration pool:{}", x.getKey());
-                    duplicatePresent.set(true);
-                });
-        if (duplicatePresent.get()) {
-            throw new RuntimeException("Duplicate Hystrix Pool Configurations");
         }
     }
 

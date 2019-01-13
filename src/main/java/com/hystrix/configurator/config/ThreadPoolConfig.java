@@ -20,8 +20,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * @author phaneesh
  */
@@ -29,40 +27,23 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class ThreadPoolConfig {
 
-    @NotNull
-    private String pool;
-
-    private boolean semaphoreIsolation = false;
-
     private int concurrency = 8;
 
     private int maxRequestQueueSize = 128;
 
     private int dynamicRequestQueueSize = 16;
 
-    private int timeout = 1000;
-
     @Builder
-    public ThreadPoolConfig(String pool,
-                            boolean semaphoreIsolation,
-                            int concurrency,
+    public ThreadPoolConfig(int concurrency,
                             int maxRequestQueueSize,
-                            int dynamicRequestQueueSize,
-                            int timeout) {
-        this.pool = pool;
-        this.semaphoreIsolation = semaphoreIsolation;
+                            int dynamicRequestQueueSize) {
         this.concurrency = concurrency;
         this.maxRequestQueueSize = maxRequestQueueSize;
         this.dynamicRequestQueueSize = dynamicRequestQueueSize;
-        this.timeout = timeout;
     }
 
     //Default values
     public static class ThreadPoolConfigBuilder {
-
-        private String pool;
-
-        private boolean semaphoreIsolation = false;
 
         private int concurrency = Runtime.getRuntime().availableProcessors();
 
@@ -70,6 +51,5 @@ public class ThreadPoolConfig {
 
         private int dynamicRequestQueueSize = Runtime.getRuntime().availableProcessors() * 2;
 
-        private int timeout = 1000;
     }
 }

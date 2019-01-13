@@ -24,6 +24,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author phaneesh
@@ -36,14 +37,14 @@ public class HystrixConfig {
     private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
 
     @Valid
-    private List<ThreadPoolConfig> pools = Collections.emptyList();
+    private Map<String, ThreadPoolConfig> pools = Collections.emptyMap();
 
     @Valid
     private List<HystrixCommandConfig> commands = Collections.emptyList();
 
     @Builder
     public HystrixConfig(HystrixDefaultConfig defaultConfig,
-                         List<ThreadPoolConfig> pools,
+                         Map<String, ThreadPoolConfig> pools,
                          List<HystrixCommandConfig> commands) {
         this.defaultConfig = defaultConfig;
         this.pools = pools;
@@ -53,6 +54,8 @@ public class HystrixConfig {
     public static class HystrixConfigBuilder {
 
         private HystrixDefaultConfig defaultConfig = HystrixDefaultConfig.builder().build();
+
+        private Map<String, ThreadPoolConfig> pools = Collections.emptyMap();
 
         private List<HystrixCommandConfig> commands = Collections.emptyList();
 
