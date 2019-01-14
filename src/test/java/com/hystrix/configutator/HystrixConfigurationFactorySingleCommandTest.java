@@ -49,7 +49,7 @@ public class HystrixConfigurationFactorySingleCommandTest {
     public void testCommand() throws ExecutionException, InterruptedException {
         SimpleTestCommand command = new SimpleTestCommand();
         String result = command.queue().get();
-        Assert.assertTrue(result.equals("Simple Test"));
+        Assert.assertEquals("Simple Test", result);
     }
 
     public static class SimpleTestCommand extends HystrixCommand<String> {

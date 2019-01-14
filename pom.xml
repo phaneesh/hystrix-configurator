@@ -4,7 +4,7 @@
 
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>hystrix-configurator</name>
@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hystrix.version>1.5.3</hystrix.version>
+        <hystrix.version>1.5.18</hystrix.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <junit.version>4.12</junit.version>
         <lombok.version>1.16.6</lombok.version>

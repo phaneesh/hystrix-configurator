@@ -17,18 +17,21 @@
 
 package com.hystrix.configutator;
 
-import com.hystrix.configurator.config.HystrixCommandConfig;
-import com.hystrix.configurator.config.HystrixConfig;
-import com.hystrix.configurator.config.HystrixDefaultConfig;
+import com.hystrix.configurator.config.*;
 import com.hystrix.configurator.core.HystrixConfigurationFactory;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
-import org.junit.Assert;
+import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author phaneesh
@@ -48,11 +51,101 @@ public class HystrixConfigurationMultipleCommandsTest {
     public void testCommand() throws ExecutionException, InterruptedException {
         SimpleTestCommand1 command1 = new SimpleTestCommand1();
         String result1 = command1.queue().get();
-        Assert.assertTrue(result1.equals("Simple Test 1"));
+        assertEquals("Simple Test 1", result1);
 
         SimpleTestCommand2 command2 = new SimpleTestCommand2();
         String result2 = command2.queue().get();
-        Assert.assertTrue(result2.equals("Simple Test 2"));
+        assertEquals("Simple Test 2", result2);
+    }
+
+
+    @Test
+    public void testCommandWithDedicatedPool() throws ExecutionException, InterruptedException {
+        val hystrixConfig = HystrixConfig.builder()
+                .defaultConfig(new HystrixDefaultConfig())
+                .pools(createPoolConfigs("testPool1", "testPool2"))
+                .commands(Collections.singletonList(HystrixCommandConfig.builder()
+                        .name("test1")
+                        .threadPool(CommandThreadPoolConfig.builder()
+                                .pool("testPool1")
+                                .build())
+                        .build()))
+                .build();
+
+        HystrixConfigurationFactory.init(hystrixConfig);
+
+        SimpleTestCommand1 command1 = new SimpleTestCommand1();
+        String result1 = command1.queue().get();
+        assertEquals("Simple Test 1", result1);
+
+        SimpleTestCommand2 command2 = new SimpleTestCommand2();
+        String result2 = command2.queue().get();
+        assertEquals("Simple Test 2", result2);
+    }
+
+    @Test
+    public void testCommandWithDedicatedPoolCountPools() {
+        HystrixConfig hystrixConfig = HystrixConfig.builder()
+                .defaultConfig(new HystrixDefaultConfig())
+                .pools(createPoolConfigs("testPool1", "testPool2"))
+                .commands(Collections.singletonList(HystrixCommandConfig.builder()
+                        .name("test1")
+                        .build()))
+                .build();
+
+        HystrixConfigurationFactory.init(hystrixConfig);
+        assertEquals(1, HystrixConfigurationFactory.getCommandCache().size());
+        assertEquals(3, HystrixConfigurationFactory.getPoolCache().size());
+
+        hystrixConfig = HystrixConfig.builder()
+                .defaultConfig(new HystrixDefaultConfig())
+                .pools(createPoolConfigs("testPool1", "testPool2"))
+                .commands(Collections.singletonList(HystrixCommandConfig.builder()
+                        .name("test1")
+                        .threadPool(CommandThreadPoolConfig.builder()
+                                .pool("testPool1")
+                                .build())
+                        .build()))
+                .build();
+        HystrixConfigurationFactory.init(hystrixConfig);
+        assertEquals(1, HystrixConfigurationFactory.getCommandCache().size());
+        assertEquals(2, HystrixConfigurationFactory.getPoolCache().size());
+    }
+
+    @Test
+    public void testCommandWithSemaphoreIsolation() throws ExecutionException, InterruptedException {
+        HystrixConfig hystrixConfig = HystrixConfig.builder()
+                .defaultConfig(new HystrixDefaultConfig())
+                .pools(createPoolConfigs("testPool1", "testPool2"))
+                .commands(Collections.singletonList(HystrixCommandConfig.builder()
+                        .name("test1")
+                        .threadPool(CommandThreadPoolConfig.builder()
+                                .semaphoreIsolation(true)
+                                .build())
+                        .build()))
+                .build();
+        HystrixConfigurationFactory.init(hystrixConfig);
+        assertEquals(1, HystrixConfigurationFactory.getCommandCache().size());
+        assertEquals(2, HystrixConfigurationFactory.getPoolCache().size());
+        SimpleTestCommand1 command = new SimpleTestCommand1();
+        String result1 = command.queue().get();
+        assertEquals("Simple Test 1", result1);
+
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCommandWithNonExistingDedicatedPool() {
+        val hystrixConfig = HystrixConfig.builder()
+                .defaultConfig(new HystrixDefaultConfig())
+                .pools(createPoolConfigs("testPool1", "testPool2"))
+                .commands(Collections.singletonList(HystrixCommandConfig.builder()
+                        .name("test1")
+                        .threadPool(CommandThreadPoolConfig.builder()
+                                .pool("testPool3")
+                                .build())
+                        .build()))
+                .build();
+        HystrixConfigurationFactory.init(hystrixConfig);
     }
 
     public static class SimpleTestCommand1 extends HystrixCommand<String> {
@@ -62,7 +155,7 @@ public class HystrixConfigurationMultipleCommandsTest {
         }
 
         @Override
-        protected String run() throws Exception {
+        protected String run() {
             return "Simple Test 1";
         }
     }
@@ -74,8 +167,13 @@ public class HystrixConfigurationMultipleCommandsTest {
         }
 
         @Override
-        protected String run() throws Exception {
+        protected String run() {
             return "Simple Test 2";
         }
     }
+
+    private Map<String, ThreadPoolConfig> createPoolConfigs(String... poolNames) {
+        return Stream.of(poolNames).collect(Collectors.toMap(x -> x, x -> ThreadPoolConfig.builder().build()));
+    }
+
 }
