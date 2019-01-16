@@ -6,7 +6,11 @@ import com.netflix.hystrix.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.StringUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -45,12 +49,23 @@ public class HystrixConfigurationFactory {
 
         registerDefaultProperties(defaultConfig);
 
-        if (config.getPools() != null) {
-            config.getPools().forEach((pool, poolConfig) -> configureThreadPoolIfMissing(globalPoolId(pool), poolConfig));
+        if (config.getPools() == null){
+            config.setPools(new HashMap<>());
         }
+
+        validateUniquePools(config.getPools());
+        config.setPools(new TreeMap<String, ThreadPoolConfig>(String.CASE_INSENSITIVE_ORDER) {{
+            putAll(config.getPools());
+        }});
+
+        config.getPools().forEach((pool, poolConfig) -> {
+            configureThreadPoolIfMissing(globalPoolId(pool), poolConfig);
+        });
 
         config.getCommands()
                 .forEach(commandConfig -> {
+                    commandConfig.setName(sanitizeString(commandConfig.getName()));
+
                     if (commandConfig.getCircuitBreaker() == null) {
                         commandConfig.setCircuitBreaker(defaultConfig.getCircuitBreaker());
                     }
@@ -62,18 +77,17 @@ public class HystrixConfigurationFactory {
                     if (commandConfig.getThreadPool() == null) {
                         commandConfig.setThreadPool(defaultConfig.getThreadPool());
                     }
-
                     registerCommandProperties(defaultConfig, commandConfig);
                     log.info("registered command: {}", commandConfig.getName());
                 });
     }
 
     private String globalPoolId(String pool) {
-        return String.format("global_%s", pool);
+        return sanitizeString(String.format("global_%s", pool));
     }
 
     private String commandPoolId(String commandName) {
-        return String.format("command_%s", commandName);
+        return sanitizeString(String.format("command_%s", commandName));
     }
 
     private void registerDefaultProperties(HystrixDefaultConfig defaultConfig) {
@@ -106,7 +120,7 @@ public class HystrixConfigurationFactory {
     }
 
     private void registerCommandProperties(String group, String command) {
-        val threadPool = config.getPools().containsKey(group.toLowerCase())
+        val threadPool = config.getPools().containsKey(sanitizeString(group))
                 ? toCommandThreadPool(group)
                 : defaultConfig.getThreadPool();
 
@@ -235,6 +249,23 @@ public class HystrixConfigurationFactory {
                 .withQueueSizeRejectionThreshold(poolConfig.getDynamicRequestQueueSize()));
     }
 
+    private void validateUniquePools(Map<String, ThreadPoolConfig> pools) {
+        AtomicBoolean duplicatePresent = new AtomicBoolean(false);
+        pools.entrySet()
+                .stream()
+                .collect(Collectors.groupingBy(x->sanitizeString(x.getKey()), Collectors.counting()))
+                .entrySet()
+                .stream()
+                .filter(x -> x.getValue() > 1)
+                .forEach(x->{
+                    log.error("Duplicate group configuration for group [{}]", x.getKey());
+                    duplicatePresent.set(true);
+                });
+        if (duplicatePresent.get()) {
+            throw new RuntimeException("Duplicate Hystrix Group Configurations");
+        }
+    }
+
     private void validateUniqueCommands(HystrixConfig config) {
         if (config.getCommands() == null) {
             return;
@@ -247,7 +278,7 @@ public class HystrixConfigurationFactory {
                 .stream()
                 .filter(x -> x.getValue() > 1)
                 .forEach(x -> {
-                    log.warn("Duplicate command configuration for command [{}]", x.getKey());
+                    log.error("Duplicate command configuration for command [{}]", x.getKey());
                     duplicatePresent.set(true);
                 });
         if (duplicatePresent.get()) {
@@ -268,19 +299,22 @@ public class HystrixConfigurationFactory {
     }
 
     public static HystrixCommand.Setter getCommandConfiguration(final String key) {
+        val sanitizedCommandName = sanitizeString(key);
         if (factory == null) throw new IllegalStateException("Factory not initialized");
-        if (!factory.commandCache.containsKey(key)) {
-            factory.registerCommandProperties(key);
+        if (!factory.commandCache.containsKey(sanitizedCommandName)) {
+            factory.registerCommandProperties(sanitizedCommandName);
         }
-        return factory.commandCache.get(key);
+        return factory.commandCache.get(sanitizedCommandName);
     }
 
     public static HystrixCommand.Setter getCommandConfiguration(final String group, final String command) {
+        val sanitizedGroupName = sanitizeString(group);
+        val sanitizedCommandName = sanitizeString(command);
         if (factory == null) throw new IllegalStateException("Factory not initialized");
-        if (!factory.commandCache.containsKey(command)) {
-            factory.registerCommandProperties(group, command);
+        if (!factory.commandCache.containsKey(sanitizedCommandName)) {
+            factory.registerCommandProperties(sanitizedGroupName, sanitizedCommandName);
         }
-        return factory.commandCache.get(command);
+        return factory.commandCache.get(sanitizedCommandName);
     }
 
     public static ConcurrentHashMap<String, HystrixCommand.Setter> getCommandCache() {
@@ -296,4 +330,9 @@ public class HystrixConfigurationFactory {
                 .pool(pool)
                 .build();
     }
+
+    private static String sanitizeString(String str){
+        return StringUtils.lowerCase(str);
+    }
+
 }
