@@ -105,6 +105,22 @@ public class HystrixConfigurationFactory {
         configureProperty("hystrix.command.default.metrics.healthSnapshot.intervalInMilliseconds", defaultConfig.getMetrics().getHealthCheckInterval());
     }
 
+    private void registerCommandProperties(String group, String command) {
+        val threadPool = config.getPools().containsKey(group.toLowerCase())
+                ? toCommandThreadPool(group)
+                : defaultConfig.getThreadPool();
+
+        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
+                .name(command)
+                .semaphoreIsolation(false)
+                .threadPool(threadPool)
+                .metrics(defaultConfig.getMetrics())
+                .circuitBreaker(defaultConfig.getCircuitBreaker())
+                .fallbackEnabled(false)
+                .build();
+        registerCommandProperties(defaultConfig, commandConfig);
+    }
+
     private void registerCommandProperties(String command) {
         HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
                 .name(command)
@@ -259,11 +275,25 @@ public class HystrixConfigurationFactory {
         return factory.commandCache.get(key);
     }
 
+    public static HystrixCommand.Setter getCommandConfiguration(final String group, final String command) {
+        if (factory == null) throw new IllegalStateException("Factory not initialized");
+        if (!factory.commandCache.containsKey(command)) {
+            factory.registerCommandProperties(group, command);
+        }
+        return factory.commandCache.get(command);
+    }
+
     public static ConcurrentHashMap<String, HystrixCommand.Setter> getCommandCache() {
         return factory.commandCache;
     }
 
     public static ConcurrentHashMap<String, HystrixThreadPoolProperties.Setter> getPoolCache() {
         return factory.poolCache;
+    }
+
+    private CommandThreadPoolConfig toCommandThreadPool(String pool) {
+        return CommandThreadPoolConfig.builder()
+                .pool(pool)
+                .build();
     }
 }
