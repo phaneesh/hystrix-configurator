@@ -77,6 +77,8 @@ public class HystrixConfigurationFactory {
     }
 
     private void registerDefaultProperties(HystrixDefaultConfig defaultConfig) {
+
+        configureProperty("hystrix.timer.threadpool.default.coreSize",  defaultConfig.getTimer().getConcurrency());
         configureProperty("hystrix.threadpool.default.coreSize", defaultConfig.getThreadPool().getConcurrency());
         configureProperty("hystrix.threadpool.default.maxQueueSize", defaultConfig.getThreadPool().getMaxRequestQueueSize());
         configureProperty("hystrix.threadpool.default.queueSizeRejectionThreshold", defaultConfig.getThreadPool().getDynamicRequestQueueSize());
