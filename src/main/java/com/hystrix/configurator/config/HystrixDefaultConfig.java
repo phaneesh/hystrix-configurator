@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class HystrixDefaultConfig {
 
+    private TimerThreadPoolConfig timer = TimerThreadPoolConfig.builder().build();
+
     private CommandThreadPoolConfig threadPool = CommandThreadPoolConfig.builder().build();
 
     private CircuitBreakerConfig circuitBreaker = CircuitBreakerConfig.builder().build();
@@ -28,6 +30,8 @@ public class HystrixDefaultConfig {
     }
 
     public static class HystrixDefaultConfigBuilder {
+
+        private TimerThreadPoolConfig timer = TimerThreadPoolConfig.builder().build();
 
         private CommandThreadPoolConfig threadPool = CommandThreadPoolConfig.builder().build();
 
