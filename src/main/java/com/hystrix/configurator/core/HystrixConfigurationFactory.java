@@ -131,6 +131,8 @@ public class HystrixConfigurationFactory {
         configureProperty(String.format("hystrix.command.%s.execution.isolation.strategy", command), isolationStrategy.name());
         configureProperty(String.format("hystrix.command.%s.execution.timeout.enabled", command), true);
         configureProperty(String.format("hystrix.command.%s.execution.thread.timeoutInMilliseconds", command), commandConfig.getThreadPool().getTimeout());
+        configureProperty(String.format("hystrix.command.%s.execution.isolation.thread.timeoutInMilliseconds", command), commandConfig.getThreadPool().getTimeout());
+
         configureProperty(String.format("hystrix.command.%s.execution.isolation.thread.interruptOnTimeout", command), true);
 
         if (semaphoreIsolation) {
@@ -213,11 +215,14 @@ public class HystrixConfigurationFactory {
         configureProperty(String.format("hystrix.threadpool.%s.maximumSize", poolName), poolConfig.getConcurrency());
         configureProperty(String.format("hystrix.threadpool.%s.maxQueueSize", poolName), poolConfig.getMaxRequestQueueSize());
         configureProperty(String.format("hystrix.threadpool.%s.queueSizeRejectionThreshold", poolName), poolConfig.getDynamicRequestQueueSize());
+        configureProperty(String.format("hystrix.threadpool.%s.allowMaximumSizeToDivergeFromCoreSize", poolName), poolConfig.isAllowMaximumSizeToDivergeFromCoreSize());
+
 
         poolCache.put(poolName, HystrixThreadPoolProperties.Setter()
                 .withCoreSize(poolConfig.getConcurrency())
                 .withMaximumSize(poolConfig.getConcurrency())
                 .withMaxQueueSize(poolConfig.getMaxRequestQueueSize())
+                .withAllowMaximumSizeToDivergeFromCoreSize(poolConfig.isAllowMaximumSizeToDivergeFromCoreSize())
                 .withQueueSizeRejectionThreshold(poolConfig.getDynamicRequestQueueSize()));
     }
 
