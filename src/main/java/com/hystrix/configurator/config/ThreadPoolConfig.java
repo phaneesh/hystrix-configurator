@@ -32,14 +32,18 @@ public class ThreadPoolConfig {
     private int maxRequestQueueSize = 128;
 
     private int dynamicRequestQueueSize = 16;
+    private boolean allowMaximumSizeToDivergeFromCoreSize = false;
+
 
     @Builder
     public ThreadPoolConfig(int concurrency,
                             int maxRequestQueueSize,
-                            int dynamicRequestQueueSize) {
+                            int dynamicRequestQueueSize, boolean allowMaximumSizeToDivergeFromCoreSize) {
         this.concurrency = concurrency;
         this.maxRequestQueueSize = maxRequestQueueSize;
         this.dynamicRequestQueueSize = dynamicRequestQueueSize;
+        this.allowMaximumSizeToDivergeFromCoreSize = allowMaximumSizeToDivergeFromCoreSize;
+
     }
 
     //Default values
@@ -50,6 +54,8 @@ public class ThreadPoolConfig {
         private int maxRequestQueueSize = Runtime.getRuntime().availableProcessors() * 4;
 
         private int dynamicRequestQueueSize = Runtime.getRuntime().availableProcessors() * 2;
+        private boolean allowMaximumSizeToDivergeFromCoreSize = false;
+
 
     }
 }
