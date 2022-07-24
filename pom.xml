@@ -40,6 +40,11 @@
             <name>Phaneesh Nagaraja</name>
             <email>phaneesh.n@gmail.com</email>
         </developer>
+        <developer>
+            <id>AnkushNakaskar</id>
+            <name>Ankush Nakaskar</name>
+            <email>ankush.nakaskar@gmail.com</email>
+        </developer>
     </developers>
 
     <properties>
