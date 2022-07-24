@@ -4,7 +4,7 @@
 
     <groupId>com.hystrix</groupId>
     <artifactId>hystrix-configurator</artifactId>
-    <version>0.0.9</version>
+    <version>0.0.10</version>
     <packaging>jar</packaging>
 
     <name>hystrix-configurator</name>
@@ -45,12 +45,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hystrix.version>1.5.18</hystrix.version>
-        <javax.validation.version>1.1.0.Final</javax.validation.version>
-        <junit.version>4.12</junit.version>
-        <lombok.version>1.16.6</lombok.version>
-        <lombok.maven.version>1.16.6.1</lombok.maven.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <javax.validation.version>2.0.1.Final</javax.validation.version>
+        <junit.version>4.13.2</junit.version>
+        <lombok.version>1.18.24</lombok.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -78,53 +77,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>delombok</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <version>${lombok.maven.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.7</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <instrumentation>
-                        <ignoreTrivial>true</ignoreTrivial>
-                        <excludes>
-                            <exclude>com/hystrix/configurator/config/**/*.class</exclude>
-                        </excludes>
-                    </instrumentation>
-                    <check>
-                    </check>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
