@@ -20,7 +20,16 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class HystrixConfigurationDynamicUpdateTest {
 
-    private void changeTimeout(String commandName) {
+    @Before
+    public void setup() {
+        HystrixConfigurationFactory.init(
+                HystrixConfig.builder()
+                        .defaultConfig(new HystrixDefaultConfig())
+                        .commands(Collections.singletonList(HystrixCommandConfig.builder().name("test").build()))
+                        .build());
+    }
+
+    private void changeTimeoutAndTest(String commandName) throws ExecutionException, InterruptedException {
 
         HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
                 .name("TestCommand")
@@ -30,7 +39,9 @@ public class HystrixConfigurationDynamicUpdateTest {
                 .circuitBreaker(CircuitBreakerConfig.builder().build())
                 .fallbackEnabled(false)
                 .build();
-        HystrixConfigurationFactory.updateWithNewHystrixConfig("TestCommand", commandConfig);
+        SimpleTestCommand command111 = new SimpleTestCommand(commandConfig);
+        String result1 = command111.queue().get();
+        Assert.assertTrue(result1.equals("Simple Test"));
     }
 
 
@@ -50,10 +61,8 @@ public class HystrixConfigurationDynamicUpdateTest {
             String result = command3.queue().get();
             Assert.assertTrue(result.equals("Simple Test"));
         } catch (Exception e) {
-            changeTimeout("TestCommand");
-            SimpleTestCommand command111 = new SimpleTestCommand(null);
-            String result1 = command111.queue().get();
-            Assert.assertTrue(result1.equals("Simple Test"));
+            changeTimeoutAndTest("TestCommand");
+
         }
     }
 

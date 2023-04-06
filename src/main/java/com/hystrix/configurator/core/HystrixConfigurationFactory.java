@@ -290,14 +290,6 @@ public class HystrixConfigurationFactory {
         return factory.commandCache.get(key);
     }
 
-    public static HystrixCommand.Setter getOrSetCommandConfiguration(final String key, HystrixCommandConfig config) {
-        if (factory == null) throw new IllegalStateException("Factory not initialized");
-        if (!factory.commandCache.containsKey(key)) {
-            factory.registerCommandProperties(key, config);
-        }
-        return factory.commandCache.get(key);
-    }
-
     public static ConcurrentHashMap<String, HystrixCommand.Setter> getCommandCache() {
         return factory.commandCache;
     }
@@ -306,7 +298,7 @@ public class HystrixConfigurationFactory {
         return factory.poolCache;
     }
 
-    public static HystrixCommand.Setter updateWithNewHystrixConfig(final String key, HystrixCommandConfig commandConfig) {
+    public static HystrixCommand.Setter updateOrCreateWithNewHystrixConfig(final String key, HystrixCommandConfig commandConfig) {
         if (factory == null) throw new IllegalStateException("Factory not initialized");
         if (factory.commandCache.containsKey(key)) {
             factory.commandCache.remove(key);

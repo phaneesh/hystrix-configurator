@@ -13,7 +13,7 @@ public abstract class BaseCommand<T> extends HystrixCommand<T> {
     }
 
     public BaseCommand(final String name, final HystrixCommandConfig commandConfig) {
-        super(HystrixConfigurationFactory.getOrSetCommandConfiguration(name, commandConfig));
+        super(HystrixConfigurationFactory.updateOrCreateWithNewHystrixConfig(name, commandConfig));
     }
 
 }
