@@ -81,10 +81,5 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.appform.core</groupId>
-            <artifactId>hystrix-function-wrapper</artifactId>
-            <version>1.1.8</version>
-        </dependency>
     </dependencies>
 </project>
