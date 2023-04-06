@@ -119,6 +119,30 @@ public class HystrixConfigurationFactory {
         registerCommandProperties(defaultConfig, commandConfig);
     }
 
+
+    private void registerCommandProperties(String command, HystrixCommandConfig config) {
+        if (config.getCircuitBreaker() == null) {
+            config.setCircuitBreaker(defaultConfig.getCircuitBreaker());
+        }
+        if (config.getMetrics() == null) {
+            config.setMetrics(defaultConfig.getMetrics());
+        }
+        if (config.getThreadPool() == null) {
+            config.setThreadPool(defaultConfig.getThreadPool());
+        }
+
+        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
+                .name(command)
+                .semaphoreIsolation(false)
+                .threadPool(config.getThreadPool())
+                .metrics(config.getMetrics())
+                .circuitBreaker(config.getCircuitBreaker())
+                .fallbackEnabled(false)
+                .build();
+        registerCommandProperties(defaultConfig, commandConfig);
+
+        log.info("registered command: {}", commandConfig.getName());
+    }
     private void registerCommandProperties(HystrixDefaultConfig defaultConfig, HystrixCommandConfig commandConfig) {
         val command = commandConfig.getName();
 
@@ -262,6 +286,14 @@ public class HystrixConfigurationFactory {
         if (factory == null) throw new IllegalStateException("Factory not initialized");
         if (!factory.commandCache.containsKey(key)) {
             factory.registerCommandProperties(key);
+        }
+        return factory.commandCache.get(key);
+    }
+
+    public static HystrixCommand.Setter getOrSetCommandConfiguration(final String key, HystrixCommandConfig config) {
+        if (factory == null) throw new IllegalStateException("Factory not initialized");
+        if (!factory.commandCache.containsKey(key)) {
+            factory.registerCommandProperties(key, config);
         }
         return factory.commandCache.get(key);
     }
