@@ -305,4 +305,16 @@ public class HystrixConfigurationFactory {
     public static ConcurrentHashMap<String, HystrixThreadPoolProperties.Setter> getPoolCache() {
         return factory.poolCache;
     }
+
+    public static HystrixCommand.Setter updateWithNewHystrixConfig(final String key, HystrixCommandConfig commandConfig) {
+        if (factory == null) throw new IllegalStateException("Factory not initialized");
+        if (factory.commandCache.containsKey(key)) {
+            factory.commandCache.remove(key);
+        }
+        if (factory.poolCache.containsKey("command_" + key)) {
+            factory.poolCache.remove("command_" + key);
+        }
+        factory.registerCommandProperties(key, commandConfig);
+        return factory.commandCache.get(key);
+    }
 }

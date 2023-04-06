@@ -20,24 +20,17 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class HystrixConfigurationDynamicUpdateTest {
 
-    private void changeTimeout() {
-        if (HystrixConfigurationFactory.getCommandCache().containsKey("TestCommand")) {
+    private void changeTimeout(String commandName) {
 
-            HystrixConfigurationFactory.getCommandCache().remove("TestCommand");
-            HystrixConfigurationFactory.getPoolCache().remove("command_TestCommand");
-
-            HystrixCommandConfig commandConfig1 = HystrixCommandConfig.builder()
-                    .name("TestCommand")
-                    .semaphoreIsolation(false)
-                    .threadPool(CommandThreadPoolConfig.builder().timeout(4000).build())
-                    .metrics(MetricsConfig.builder().build())
-                    .circuitBreaker(CircuitBreakerConfig.builder().build())
-                    .fallbackEnabled(false)
-                    .build();
-
-            HystrixConfigurationFactory.getOrSetCommandConfiguration("TestCommand", commandConfig1);
-            log.info("Works!!!!");
-        }
+        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
+                .name("TestCommand")
+                .semaphoreIsolation(false)
+                .threadPool(CommandThreadPoolConfig.builder().timeout(4000).build())
+                .metrics(MetricsConfig.builder().build())
+                .circuitBreaker(CircuitBreakerConfig.builder().build())
+                .fallbackEnabled(false)
+                .build();
+        HystrixConfigurationFactory.updateWithNewHystrixConfig("TestCommand", commandConfig);
     }
 
 
@@ -57,7 +50,7 @@ public class HystrixConfigurationDynamicUpdateTest {
             String result = command3.queue().get();
             Assert.assertTrue(result.equals("Simple Test"));
         } catch (Exception e) {
-            changeTimeout();
+            changeTimeout("TestCommand");
             SimpleTestCommand command111 = new SimpleTestCommand(null);
             String result1 = command111.queue().get();
             Assert.assertTrue(result1.equals("Simple Test"));
