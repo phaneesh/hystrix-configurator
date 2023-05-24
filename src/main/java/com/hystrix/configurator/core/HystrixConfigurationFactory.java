@@ -119,6 +119,30 @@ public class HystrixConfigurationFactory {
         registerCommandProperties(defaultConfig, commandConfig);
     }
 
+
+    private void registerCommandProperties(String command, HystrixCommandConfig config) {
+        if (config.getCircuitBreaker() == null) {
+            config.setCircuitBreaker(defaultConfig.getCircuitBreaker());
+        }
+        if (config.getMetrics() == null) {
+            config.setMetrics(defaultConfig.getMetrics());
+        }
+        if (config.getThreadPool() == null) {
+            config.setThreadPool(defaultConfig.getThreadPool());
+        }
+
+        HystrixCommandConfig commandConfig = HystrixCommandConfig.builder()
+                .name(command)
+                .semaphoreIsolation(false)
+                .threadPool(config.getThreadPool())
+                .metrics(config.getMetrics())
+                .circuitBreaker(config.getCircuitBreaker())
+                .fallbackEnabled(false)
+                .build();
+        registerCommandProperties(defaultConfig, commandConfig);
+
+        log.info("registered command: {}", commandConfig.getName());
+    }
     private void registerCommandProperties(HystrixDefaultConfig defaultConfig, HystrixCommandConfig commandConfig) {
         val command = commandConfig.getName();
 
@@ -272,5 +296,17 @@ public class HystrixConfigurationFactory {
 
     public static ConcurrentHashMap<String, HystrixThreadPoolProperties.Setter> getPoolCache() {
         return factory.poolCache;
+    }
+
+    public static HystrixCommand.Setter updateOrCreateWithNewHystrixConfig(final String key, HystrixCommandConfig commandConfig) {
+        if (factory == null) throw new IllegalStateException("Factory not initialized");
+        if (factory.commandCache.containsKey(key)) {
+            factory.commandCache.remove(key);
+        }
+        if (factory.poolCache.containsKey("command_" + key)) {
+            factory.poolCache.remove("command_" + key);
+        }
+        factory.registerCommandProperties(key, commandConfig);
+        return factory.commandCache.get(key);
     }
 }
