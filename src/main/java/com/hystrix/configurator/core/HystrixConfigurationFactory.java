@@ -97,6 +97,7 @@ public class HystrixConfigurationFactory {
         configureProperty("hystrix.command.default.circuitBreaker.requestVolumeThreshold", defaultConfig.getCircuitBreaker().getAcceptableFailuresInWindow());
         configureProperty("hystrix.command.default.circuitBreaker.errorThresholdPercentage", defaultConfig.getCircuitBreaker().getErrorThreshold());
         configureProperty("hystrix.command.default.circuitBreaker.sleepWindowInMilliseconds", defaultConfig.getCircuitBreaker().getWaitTimeBeforeRetry());
+        configureProperty("hystrix.command.default.circuitBreaker.forceClosed", defaultConfig.getCircuitBreaker().isForceClosed());
 
         configureProperty("hystrix.command.default.metrics.rollingStats.timeInMilliseconds", defaultConfig.getMetrics().getStatsTimeInMillis());
         configureProperty("hystrix.command.default.metrics.rollingStats.numBuckets", defaultConfig.getMetrics().getNumBucketSize());
@@ -167,6 +168,7 @@ public class HystrixConfigurationFactory {
         configureProperty(String.format("hystrix.command.%s.circuitBreaker.requestVolumeThreshold", commandConfig.getName()), commandConfig.getCircuitBreaker().getAcceptableFailuresInWindow());
         configureProperty(String.format("hystrix.command.%s.circuitBreaker.errorThresholdPercentage", commandConfig.getName()), commandConfig.getCircuitBreaker().getErrorThreshold());
         configureProperty(String.format("hystrix.command.%s.circuitBreaker.sleepWindowInMilliseconds", commandConfig.getName()), commandConfig.getCircuitBreaker().getWaitTimeBeforeRetry());
+        configureProperty(String.format("hystrix.command.%s.circuitBreaker.forceClosed", commandConfig.getName()), commandConfig.getCircuitBreaker().isForceClosed());
 
         configureProperty(String.format("hystrix.command.%s.metrics.rollingStats.timeInMilliseconds", commandConfig.getName()), commandConfig.getMetrics().getStatsTimeInMillis());
         configureProperty(String.format("hystrix.command.%s.metrics.rollingStats.numBuckets", commandConfig.getName()), commandConfig.getMetrics().getNumBucketSize());
@@ -183,6 +185,7 @@ public class HystrixConfigurationFactory {
                 .withCircuitBreakerErrorThresholdPercentage(commandConfig.getCircuitBreaker().getErrorThreshold())
                 .withCircuitBreakerRequestVolumeThreshold(commandConfig.getCircuitBreaker().getAcceptableFailuresInWindow())
                 .withCircuitBreakerSleepWindowInMilliseconds(commandConfig.getCircuitBreaker().getWaitTimeBeforeRetry())
+                .withCircuitBreakerForceClosed(commandConfig.getCircuitBreaker().isForceClosed())
                 .withExecutionTimeoutInMilliseconds(commandConfig.getThreadPool().getTimeout())
                 .withMetricsHealthSnapshotIntervalInMilliseconds(commandConfig.getMetrics().getHealthCheckInterval())
                 .withMetricsRollingPercentileBucketSize(commandConfig.getMetrics().getPercentileBucketSize())

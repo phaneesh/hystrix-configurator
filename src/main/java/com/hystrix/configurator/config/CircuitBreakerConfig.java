@@ -33,11 +33,16 @@ public class CircuitBreakerConfig {
 
     private int errorThreshold = 50;
 
+    private boolean forceClosed;
+
+
     @Builder
-    public CircuitBreakerConfig(int acceptableFailuresInWindow, int waitTimeBeforeRetry, int errorThreshold) {
+    public CircuitBreakerConfig(int acceptableFailuresInWindow, int waitTimeBeforeRetry,
+        int errorThreshold, boolean forceClosed) {
         this.acceptableFailuresInWindow = acceptableFailuresInWindow;
         this.waitTimeBeforeRetry = waitTimeBeforeRetry;
         this.errorThreshold = errorThreshold;
+        this.forceClosed = forceClosed;
     }
 
     //Default values
@@ -48,5 +53,7 @@ public class CircuitBreakerConfig {
         private int waitTimeBeforeRetry = 5000;
 
         private int errorThreshold = 50;
+
+        private boolean forceClosed = false;
     }
 }
